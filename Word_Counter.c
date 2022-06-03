@@ -2,54 +2,54 @@
 #include<stdlib.h>
 #include<string.h>
 
-struct liste {
- 	char kelime[20];
-	int adet;
-	struct liste *next;
+struct list {
+ 	char word[20];
+	int piece;
+	struct list *next;
 };
-typedef struct liste Liste;
+typedef struct list List;
 
-void okuma(char current[]);
-void kelimeAl(char metin[],Liste **headOfList);
-void kontrol(char kelime[],Liste **headOfList);
-void listeEkleme(char kelime[],int sayac,Liste **headOfList);
-void listeBastirma(Liste* headOfList);
-int arama(char kelime[],Liste* headOfList);
-void basaEkleme(Liste* newWords,Liste **headOfList);
-void sonaEkleme(Liste* newWords,Liste *currentList);
-void arayaEkleme(Liste* newWords,Liste *currentList);
+void readFile(char current[]);
+void getWord(char text[],List **headOfList);
+void controlText(char word[],List **headOfList);
+void addList(char word[],int numberCounter,List **headOfList);
+void printList(List* headOfList);
+int searchText(char word[],List* headOfList);
+void addListHead(List* newWords,List **headOfList);
+void addListEnd(List* newWords,List *currentList);
+void addListBetwenn(List* newWords,List *currentList);
 
-char metin[100];
+char text[100];
 
 int main(){
-	Liste *headOfList = NULL;
-	okuma(metin);
+	List *headOfList = NULL;
+	readFile(text);
 	/*	
-	// metni ekrana bastýrma ---------------------
+	// print full text ---
 	int i ;
-	while(metin[i] !='\0'){
-		printf("%c",metin[i]);
+	while(text[i] !='\0'){
+		printf("%c",text[i]);
 		i++;
 	}
-	// metni ekrana bastýrma ---------------------
+	// print full text ---
 	*/
-	kelimeAl(metin,&headOfList);
-	listeBastirma(headOfList);
+	getWord(text,&headOfList);
+	printList(headOfList);
 	return 0;
 }
 
-void okuma(char metin[]){
+void readFile(char text[]){
 	FILE *readd = NULL;
 	int i  = 0;
 	int counter = 0;
-	char kelime;
-	if((readd = fopen("metin.txt","r")) != NULL){
+	char word;
+	if((readd = fopen("text.txt","r")) != NULL){
 		while(!feof(readd)){
-			fscanf(readd,"%c",&kelime);
-			if(kelime >='A' &&  kelime <= 'Z'){ // DOWN CASÝNG ÝSLEMÝ
-				kelime = kelime +32;
+			fscanf(readd,"%c",&word);
+			if(word >='A' &&  word <= 'Z'){ // Down Casing
+				word = word +32;
 			}
-			metin[i] = kelime;
+			text[i] = word;
 			i++;	
 		}
 		
@@ -62,19 +62,19 @@ void okuma(char metin[]){
 	
 }
 
-void kelimeAl(char metin[],Liste **headOfList){
+void getWord(char text[],List **headOfList){
 	int i = 0;
 	int j = 0;
-	char kelime[20];
-	while(metin[i] != '\0'){
-		if(metin[i+1] == ' '){
-			kelime[j]=metin[i];
-			kelime[j+1] = '\0';
+	char word[20];
+	while(text[i] != '\0'){
+		if(text[i+1] == ' '){
+			word[j]=text[i];
+			word[j+1] = '\0';
 			j = 0;
-			kontrol(kelime,headOfList); // metinde yazýldýðý sýrada kelimeler okunur ve kontrol methoduna yollanýr. 
+			controlText(word,headOfList); // read word and check text
 		}else{
-			if(metin[i] != ' ' && metin[i+1] != '\0'){
-				kelime[j] = metin[i];
+			if(text[i] != ' ' && text[i+1] != '\0'){
+				word[j] = text[i];
 				j++;	
 			}
 		}
@@ -83,84 +83,80 @@ void kelimeAl(char metin[],Liste **headOfList){
 }
 
 
-void kontrol(char kelime[],Liste **headOfList){
-	char geciciKelime[20];
+void controlText(char word[],List **headOfList){
+	char tempText[20];
 	int i = 0;
 	int j = 0;
-	int sayac = 0;
+	int numberCounter = 0;
 	int counter = 0;
-	while(metin[i] != '\0'){  
-		if(metin[i+1] == ' '){
-			geciciKelime[j]=metin[i];
-			geciciKelime[j+1] = '\0';
+	while(text[i] != '\0'){  
+		if(text[i+1] == ' '){
+			tempText[j]=text[i];
+			tempText[j+1] = '\0';
 			j = 0;
-			if(strcmp(geciciKelime,kelime) == 0){ // metinde verilen sýrada kelimeler alýnýr ve parametre olarak yollananan kelimeye eþit olanlar kontrol edilir
-				sayac++; // Metinde parametre olarak yollanan kelimeden kaçtane oldugunu sayacý arttýrarak görülür
+			if(strcmp(tempText,word) == 0){ 
+				numberCounter++; 
 			}
 		}else{
-			if(metin[i] != ' '){
-				geciciKelime[j] = metin[i];
+			if(text[i] != ' '){
+				tempText[j] = text[i];
 				j++;	
 			}
 		}
 		i++;
 	}
-	if(arama(kelime,*headOfList) == 0){ // bagli listede eger o kelime eklenmemisse  
-		listeEkleme(kelime,sayac,headOfList); // bagli listeye ekleme yapilir
+	if(searchText(word,*headOfList) == 0){ //  first add list word
+		addList(word,numberCounter,headOfList); // add list
 	}
 }
 
-void listeEkleme(char kelime[],int sayac,Liste **headOfList){
-	Liste *currentList = (*headOfList); // CURRENTLIST LISTENIN BASINI GOSTERIYOR
-	Liste *newWords = (Liste*)malloc(sizeof(Liste)); // YENI DUGUM OLSTURULUR
-	strcpy(newWords->kelime,kelime); // DUGUMUN KELIMESI PARAMETRE OLARAK GELEN KELIME EKLENIR
-	newWords->adet = sayac; // DUGUMUN ADET SAYISI PARAMETRE OLARAK GELEN KELIMENIN TEKRAR SAYISI EKLENIR
-	if(currentList == NULL){ // BAGLI LISTE BOSSA
-			basaEkleme(newWords,headOfList);
-    }else if (currentList -> next == NULL){ // BAGLI LISTEDE 1 ELEMAN VARSA 
-		if(currentList -> adet > sayac){ // LÝSTEDEKÝ KELÝMENÝN TEKRAR SAYISI  EKLÝCEGÝMÝZDEN KELÝMENÝN TEKRAR SAYISINDAN FAZLAYSA
-			sonaEkleme(newWords,currentList); // SONA EKLEME YAPILIR
-		}else if(currentList -> adet < sayac){ // LÝSTEDEKÝ KELÝMENÝN TEKRAR SAYISI EKLICEGIMIZ KELÝMENÝN TEKRAR SAYISINDAN AZ ISE
-			basaEkleme(newWords,headOfList); // BASA EKLEME YAPILIR
+void addList(char word[],int numberCounter,List **headOfList){
+	List *currentList = (*headOfList); 
+	List *newWords = (List*)malloc(sizeof(List)); 
+	strcpy(newWords->word,word); 
+	newWords->piece = numberCounter; 
+	if(currentList == NULL){ // list equals empty 
+			addListHead(newWords,headOfList);
+    }else if (currentList -> next == NULL){ // list include 1 word
+		if(currentList -> piece > numberCounter){ 
+			addListEnd(newWords,currentList); // list add end 
+		}else if(currentList -> piece < numberCounter){
+			addListHead(newWords,headOfList); // list add first
 		}
-	}else{ // BAGLI LÝSTEDE 1'DEN FAZLA ELEMAN VAR ÝSE
+	}else{ // list more word include
 		while(currentList !=NULL){
-			if(currentList->adet > sayac ){ // LÝSTEDEKÝ ÝLK ELEMANIN TEKRAR SAYISI EKLENILCEK KELIMENIN TEKRARINDAN FAZLA ISE
-				if(currentList -> next != NULL && currentList -> next -> adet < sayac){ // LÝSTEDE 2 VE 2 DEN FAZLA ELEMAN  VAR VE 2.ELEMANIN TEKRAR SAYISI BÝZÝM EKLÝCEGÝMÝZ KELÝMENÝN TEKRAR SAYISINDAN AZ ÝSE
-					arayaEkleme(newWords,currentList);  // ARAYA EKLEME YAPILIR
+			if(currentList->piece > numberCounter ){ // 
+				if(currentList -> next != NULL && currentList -> next -> piece < numberCounter){
+					addListBetwenn(newWords,currentList);  
 					break;
-				}else if(currentList -> next != NULL && currentList -> next -> adet  ==  sayac){ // LÝSTEDE 2 VE 2 DEN FAZLA ELEMAN VAR VE 2.ELEAMANIN TEKRAR SAYISI BIZIM EKLICEGIMIZ KELIMENIN TEKRAR SAYISINA ESIT ISE
-					while( currentList -> next != NULL && currentList -> next -> adet == sayac  ){// LISTEDE TEKRAR SAYILARI AYNI OLAN KELIMELERIN SONUNA KADAR GIDILIR
+				}else if(currentList -> next != NULL && currentList -> next -> piece  ==  numberCounter){ 
+					while( currentList -> next != NULL && currentList -> next -> piece == numberCounter  ){
 						currentList = currentList -> next;
 					}
-					// 6 5 5 5  LÝSTE OLDUGUNU DUSUNURSEK  CURRENT EN SONDAKI 5 I GOSTERIYOR OLUR (EKLENICEK ELEMAN 5)
-					// 5 3 3 3 2 1 OLDUGUNU DUSUUNURSEK CURRENT BASTAN BAKILIRKEN EN SON OLAN 3 U GOSTERIR(EKLENICEK ELEMAN 3 )
-					if(currentList -> next  == NULL){ // EGER SONDAKINI GOSTERIYORSA
-						sonaEkleme(newWords,currentList); // SONA EKLEME YAPILIR
+			
+					if(currentList -> next  == NULL){ 
+						addListEnd(newWords,currentList); 
 					}else{
-						arayaEkleme(newWords,currentList); // ARAYA EKLEME YAPILIR
+						addListBetwenn(newWords,currentList); 
 					}
 					break;
-					// 5 4  LISTE OLDUGUNU DUSUNURSEK CURRENT (EKLENICEK ELEMAN 4 OLDUGUNDA)
-				}else if(currentList -> next == NULL){// CURRENT EN SON 4  GOSTERIP
-					sonaEkleme(newWords,currentList); // SONA EKLEME YAPILIR
+				
+				}else if(currentList -> next == NULL){
+					addListEnd(newWords,currentList);
 					break;
 				}
-			}else if (currentList -> adet  == sayac){ // LISTENIN BASINDAKI ELEMANIN TEKRAR SAYISI EKLENICEK KELIMENIN TEKRAR SAYISINA ESIT ISE
-				while( currentList -> next != NULL && currentList -> next -> adet == sayac  ){ // LISTEDE TEKRAR SAYISI AYNI OLANIN SONUNA KADAR GIDILRI
+			}else if (currentList -> piece  == numberCounter){ 
+				while( currentList -> next != NULL && currentList -> next -> piece == numberCounter  ){ 
 					currentList = currentList -> next;
 				}
-				// 5 5 5 4  NULL  CURRENT  EN SON 4 DEN ONCEKI 5'I GOSTERIR(5 EKLENICEK)
-				// 5 5 5  NULL   CURRENT EN SON KI 5 I GOSTERIR(5 EKLENICEK)
-				if(currentList -> next  == NULL){// EGER CURRENTTEN SONRA NULL VAR ISTE
-					sonaEkleme(newWords,currentList); // SONA EKLEME YAPILRI
+				if(currentList -> next  == NULL){
+					addListEnd(newWords,currentList);
 				}else{
-					arayaEkleme(newWords,currentList); // ARAYA EKLEME YAPILIR
+					addListBetwenn(newWords,currentList); 
 				}
 				break;
-			}else{// LÝSTEDEKÝ ÝLK ELEMANIN TEKRAR SAYISI EKLENILCEK KELIMENIN TEKRARINDAN AZ ISE
-				//  4 4 3 3 2 1 NULL  OLDUGUNDA LISTE( 5 EKLENICEK OLURSA)
-				basaEkleme(newWords,headOfList); // BASA EKLEME YAPILIR
+			}else{
+				addListHead(newWords,headOfList); 
 				break;
 			}
 			currentList = currentList->next;
@@ -168,8 +164,8 @@ void listeEkleme(char kelime[],int sayac,Liste **headOfList){
 		}
 }
 	
-void basaEkleme(Liste* newWords,Liste **headOfList){
-	if((*headOfList) == NULL){ // LISTE BOS ISE
+void addListHead(List* newWords,List **headOfList){
+	if((*headOfList) == NULL){ 
 		newWords->next = NULL; 
 		(*headOfList) = newWords;
 	}else{
@@ -178,39 +174,39 @@ void basaEkleme(Liste* newWords,Liste **headOfList){
 	}
 }
 
-void sonaEkleme(Liste* newWords,Liste *currentList){
+void addListEnd(List* newWords,List *currentList){
 	newWords->next = NULL;
 	currentList -> next = newWords;
 }
 
-void arayaEkleme(Liste* newWords,Liste *currentList){
+void addListBetwenn(List* newWords,List *currentList){
 	newWords -> next = currentList -> next;
 	currentList -> next= newWords;
 }
 
-int arama(char kelime[],Liste *headOfList){
-	Liste *currentList = headOfList;// LISTENIN BASINI GOSTERIR
-	while(currentList!= NULL && strcmp(currentList->kelime,kelime) != 0){// CURRENTLIST NULL GOSTERMEYENE KADAR VE AYNI KELIMEDEN BULMAYANA KADAR LISTEYI GEZER
+int searchText(char word[],List *headOfList){
+	List *currentList = headOfList;
+	while(currentList!= NULL && strcmp(currentList->word,word) != 0){
 		currentList = currentList->next;
 	}
-	if(currentList == NULL){ // EGERKI NULL GOSTERIYORSA EKLENICEK ELEMAN LISTEDE YOKTUR
-		return 0; // 0 DEGERÝ DONDURULUR
+	if(currentList == NULL){ 
+		return 0; 
 	}else{
-		return -1; // EGERKI NULL GOSTERMIYORSA EKLENICEK ELEMAN LISTEDE VARDIR  -1 DEGERI DONDURULUR
+		return -1; 
 	}
 }
 
-void listeBastirma(Liste* headOfList){
-	Liste* currentList = headOfList;
+void printList(List* headOfList){
+	List* currentList = headOfList;
 	int i;
 	int counter = 1;
 	//printf("\n");
 	while(currentList !=NULL){
 		printf("%d. ",counter);
-		for(i = 0;i<strlen(currentList->kelime);i++){
-		printf("%c",currentList->kelime[i]);
+		for(i = 0;i<strlen(currentList->word);i++){
+		printf("%c",currentList->word[i]);
 		}
-		printf(":%d\n",currentList->adet);
+		printf(":%d\n",currentList->piece);
 		currentList = currentList -> next;
 		counter++;
 	}
